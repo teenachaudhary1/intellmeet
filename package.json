@@ -1,0 +1,222 @@
+# IntellMeet — AI-Powered Enterprise Meeting Platform
+
+A full-stack meeting intelligence platform with real-time video, AI summaries via Google Gemini, Socket.io live chat, and a Kanban action item tracker.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18 + Vite 5 + Tailwind CSS v3 |
+| Backend | Node.js + Express 4 |
+| Database | MongoDB Atlas + Mongoose |
+| Auth | JWT (jsonwebtoken) + bcryptjs |
+| Real-time | Socket.io |
+| AI | Google Gemini API (`gemini-1.5-flash`) |
+
+## Project Structure
+
+```
+IntellMeet/
+├── backend/
+│   ├── server.js               # Express + Socket.io entry point
+│   ├── .env.example            # Environment variable template
+│   ├── config/
+│   │   ├── db.js               # MongoDB connection
+│   │   └── socket.js           # Socket.io events & auth
+│   ├── middleware/
+│   │   ├── auth.js             # JWT protect + adminOnly
+│   │   └── errorHandler.js     # Centralized error handler
+│   ├── models/
+│   │   ├── User.js             # User + bcrypt pre-save hook
+│   │   ├── Meeting.js          # Meeting + participants + transcript
+│   │   ├── Message.js          # Chat messages
+│   │   └── ActionItem.js       # Tasks with status/priority
+│   ├── controllers/            # Route logic (auth, meetings, chat, ai, tasks, analytics)
+│   ├── routes/                 # Express routers
+│   ├── services/
+│   │   └── geminiService.js    # Gemini AI: summary + action extraction
+│   └── utils/
+│       ├── generateToken.js    # JWT signing helper
+│       └── asyncHandler.js     # Async route wrapper
+└── frontend/
+    ├── index.html
+    ├── vite.config.js          # Dev proxy: /api → localhost:5000
+    ├── tailwind.config.js
+    ├── src/
+    │   ├── main.jsx
+    │   ├── App.jsx             # React Router routes
+    │   ├── index.css           # Tailwind + custom component classes
+    │   ├── context/
+    │   │   └── AuthContext.jsx # Auth state + token management
+    │   ├── services/
+    │   │   ├── api.js          # Axios instance with interceptors
+    │   │   └── socket.js       # Socket.io singleton
+    │   ├── hooks/
+    │   │   ├── useSocket.js    # Socket connection hooks
+    │   │   └── useAuth.js      # Auth hook re-export
+    │   ├── components/
+    │   │   ├── layout/         # AppLayout, Sidebar
+    │   │   └── ui/             # Button, Card, Modal, Badge, Input, Spinner, ...
+    │   └── pages/
+    │       ├── Home.jsx        # Marketing landing page
+    │       ├── Login.jsx
+    │       ├── Register.jsx
+    │       ├── Dashboard.jsx   # Stats + upcoming + pending actions
+    │       ├── Meetings.jsx    # Meeting list + CRUD
+    │       ├── MeetingDetail.jsx # Tabs: Overview, Chat, Transcript, AI Summary, Actions
+    │       ├── LiveMeeting.jsx # Socket.io live video UI + chat
+    │       ├── ActionItems.jsx # Kanban board (Pending → In Progress → Done)
+    │       ├── Analytics.jsx   # Charts: meetings over time, pie, completion ring
+    │       └── Settings.jsx    # Profile editor
+```
+
+## Prerequisites
+
+- Node.js 18+
+- pnpm or npm
+- MongoDB Atlas account (free tier works)
+- Google Gemini API key (free at https://makersuite.google.com/app/apikey)
+
+## Quick Start
+
+### 1. Clone and install
+
+```bash
+# Backend
+cd backend
+npm install
+
+# Frontend
+cd ../frontend
+npm install
+```
+
+### 2. Configure environment variables
+
+**Backend** — copy `backend/.env.example` to `backend/.env` and fill in:
+
+```env
+NODE_ENV=development
+PORT=5000
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/intellmeet
+JWT_SECRET=your-super-secret-key-min-32-chars
+JWT_EXPIRE=7d
+GEMINI_API_KEY=your-gemini-api-key
+CLIENT_URL=http://localhost:5173
+```
+
+**Frontend** — copy `frontend/.env.example` to `frontend/.env`:
+
+```env
+VITE_API_URL=/api
+VITE_SOCKET_URL=
+```
+
+The Vite dev server proxies `/api` to `http://localhost:5000` automatically.
+
+### 3. Start both servers
+
+```bash
+# Terminal 1 — Backend
+cd backend
+npm run dev
+
+# Terminal 2 — Frontend
+cd frontend
+npm run dev
+```
+
+Open http://localhost:5173
+
+## API Routes
+
+### Auth
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | /api/auth/register | Register new user |
+| POST | /api/auth/login | Login |
+| GET | /api/auth/me | Get current user |
+| PUT | /api/auth/me | Update profile |
+
+### Meetings
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | /api/meetings | List all meetings |
+| POST | /api/meetings | Create meeting |
+| GET | /api/meetings/:id | Get meeting detail |
+| PUT | /api/meetings/:id | Update meeting |
+| DELETE | /api/meetings/:id | Delete meeting |
+| POST | /api/meetings/:id/start | Start meeting |
+| POST | /api/meetings/:id/end | End meeting |
+| GET | /api/meetings/upcoming | Upcoming scheduled meetings |
+| GET | /api/meetings/recent | Recently ended meetings |
+
+### AI (Gemini)
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | /api/ai/meetings/:id/summary | Generate AI summary |
+| GET | /api/ai/meetings/:id/summary | Get saved summary |
+| POST | /api/ai/meetings/:id/extract-actions | Extract action items with AI |
+| POST | /api/ai/meetings/:id/transcript | Add transcript entry |
+| GET | /api/ai/meetings/:id/transcript | Get full transcript |
+
+### Action Items
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | /api/tasks | List tasks (filterable) |
+| POST | /api/tasks | Create task |
+| PUT | /api/tasks/:id | Update task |
+| DELETE | /api/tasks/:id | Delete task |
+| GET | /api/tasks/stats | Task statistics |
+
+### Analytics
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | /api/analytics/dashboard | Full dashboard stats |
+| GET | /api/analytics/meetings | Meetings over time (chart data) |
+| GET | /api/analytics/action-items | Action item breakdown |
+
+## Socket.io Events
+
+### Client → Server
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `join_meeting` | `{ meetingId }` | Join a meeting room |
+| `leave_meeting` | `{ meetingId }` | Leave a meeting room |
+| `send_message` | `{ meetingId, content }` | Send a chat message |
+| `toggle_media` | `{ meetingId, isMuted, isVideoOn }` | Broadcast media state |
+
+### Server → Client
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `recent_messages` | `Message[]` | Messages on join |
+| `new_message` | `Message` | New chat message |
+| `user_joined` | `{ userId, name }` | A participant joined |
+| `user_left` | `{ userId, name }` | A participant left |
+| `meeting_started` | `{ meetingId }` | Meeting went live |
+| `meeting_ended` | `{ meetingId }` | Meeting ended |
+| `participant_media_update` | `{ userId, isMuted, isVideoOn }` | Media toggle update |
+
+## Production Deployment
+
+### Backend (e.g. Railway, Render, Fly.io)
+
+1. Set all env vars from `.env.example`
+2. Set `NODE_ENV=production`
+3. Start command: `node server.js`
+
+### Frontend (e.g. Vercel, Netlify)
+
+1. Build: `npm run build`
+2. Serve: `dist/` directory
+3. Set `VITE_API_URL=https://your-api.railway.app/api`
+4. Set `VITE_SOCKET_URL=https://your-api.railway.app`
+5. Add rewrite rule: `/*` → `/index.html` (SPA routing)
+
+### CORS
+
+Update `CLIENT_URL` in the backend `.env` to your frontend production URL.
+
+## License
+
+MIT

@@ -1,1 +1,12 @@
-# intellmeet
+node_modules/
+.env
+.env.local
+dist/
+build/
+*.log
+logs/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+dump/

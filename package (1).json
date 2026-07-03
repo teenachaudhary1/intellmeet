@@ -1,0 +1,10 @@
+export function Card({ children, className = '', onClick }) {
+  return (
+    <div onClick={onClick} className={`card p-5 ${onClick ? 'cursor-pointer hover:border-white/20 transition-colors' : ''} ${className}`}>
+      {children}
+    </div>
+  );
+}
+export function CardHeader({ children, className = '' }) { return <div className={`flex items-center justify-between mb-4 ${className}`}>{children}</div>; }
+export function CardTitle({ children, className = '' }) { return <h3 className={`font-semibold text-gray-100 ${className}`}>{children}</h3>; }
+export function CardContent({ children, className = '' }) { return <div className={className}>{children}</div>; }
